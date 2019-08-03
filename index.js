@@ -66,7 +66,7 @@ server.get('/actions', (request, response) => {
         response.status(500).json({ error: "The actions information could not be retrieved." })
     })  
 })
-server.put('/actions/:projectid/:actionid', (request, response) => {
+server.put('/actions/:actionid', (request, response) => {
     const updatedAction = request.body
     
     actionModel.update(request.params.actionid, updatedAction) 
@@ -74,16 +74,22 @@ server.put('/actions/:projectid/:actionid', (request, response) => {
         if(actions) {
             response.status(200).json(actions)
         }
+        else {
+            response.status(404).json({ message: "The action with the specified ID does not exist." })
+        }
     })
     .catch(error => {
         response.status(500).json({error: "The action information could not be modified."})
     })
 })
-server.delete('/actions/:projectid/:actionid', (request, response) => {
+server.delete('/actions/:actionid', (request, response) => {
     actionModel.remove(request.params.actionid) 
     .then(actions => {
         if(actions) {
             response.status(200).json({message: "The action has been deleted"})
+        }
+        else {
+            response.status(404).json({ message: "The action with the specified ID does not exist." })
         }
     })
     .catch(error => {
