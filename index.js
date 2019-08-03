@@ -23,9 +23,10 @@ const projectModel = require('./data/helpers/projectModel.js')
 const server = express();
 const cors = require('cors')
 
+
 function validateProjectId(request, response, next) {
-    const { id } = request.params
-    actionModel.get(id)
+    const id = request.body.project_id 
+    projectModel.get(id)
     .then(project => {
     if (project) {
         request.project = project
@@ -42,7 +43,7 @@ server.use(express.json());
 server.use(cors())
 
 //CRUD for actions
-server.post('/actions', (request, response) => {
+server.post('/actions', validateProjectId, (request, response) => {
     const newAction = request.body
     actionModel.insert(newAction)
     .then(actions => {
@@ -65,9 +66,10 @@ server.get('/actions', (request, response) => {
         response.status(500).json({ error: "The actions information could not be retrieved." })
     })  
 })
-sesrver.put('/actions/:id', validateProjectId, (request, response) => {
+server.put('/actions/:projectid/:actionid', (request, response) => {
     const updatedAction = request.body
-    actionModel.update(request.project.id, updatedAction) 
+    
+    actionModel.update(request.params.actionid, updatedAction) 
     .then(actions => {
         if(actions) {
             response.status(200).json(actions)
@@ -77,8 +79,8 @@ sesrver.put('/actions/:id', validateProjectId, (request, response) => {
         response.status(500).json({error: "The action information could not be modified."})
     })
 })
-server.delete('/actions/:id', validateProjectId, (request, response) => {
-    actionModel.remove(request.project.id) 
+server.delete('/actions/:projectid/:actionid', (request, response) => {
+    actionModel.remove(request.params.actionid) 
     .then(actions => {
         if(actions) {
             response.status(200).json({message: "The action has been deleted"})
@@ -112,9 +114,9 @@ server.get('/projects', (request, response) => {
         response.status(500).json({ error: "The projects information could not be retrieved." })
     })  
 })
-sesrver.put('/projects/:id', validateProjectId, (request, response) => {
+server.put('/projects/:id', validateProjectId, (request, response) => {
     const updatedProject = request.body
-    projectModel.update(request.project.id, updatedProject) 
+    projectModel.update(request.params.id, updatedProject) 
     .then(projects => {
         if(projects) {
             response.status(200).json(projects)
@@ -125,7 +127,7 @@ sesrver.put('/projects/:id', validateProjectId, (request, response) => {
     })
 })
 server.delete('/projects/:id', validateProjectId, (request, response) => {
-    projectModel.remove(request.project.id) 
+    projectModel.remove(request.params.id) 
     .then(projects => {
         if(projects) {
             response.status(200).json({message: "The project has been deleted"})
@@ -133,6 +135,21 @@ server.delete('/projects/:id', validateProjectId, (request, response) => {
     })
     .catch(error => {
         response.status(500).json({ error: "The project could not be removed" })
+    })
+})
+
+//Retrieve a list of actions for a project
+server.get('/projects/:id/actions', (request, response) => {
+    const id = request.params.id
+    console.log(id)
+    projectModel.getProjectActions(id) 
+    .then(actions => {
+        if(actions) {
+            response.status(200).json(actions)
+        }
+    })
+    .catch(error => {
+        response.status(500).json({ error: "The list of actions could not be retrieved" })
     })
 })
 
